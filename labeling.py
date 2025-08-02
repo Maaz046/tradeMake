@@ -84,5 +84,5 @@ if __name__ == "__main__":
     
     df = fetch_okx_data(symbol='TON/USDT', timeframe='1d')
     df = add_technical_indicators(df)
-    df = label_data(df, forward_days=3)
+    df = label_data(df, forward_days=2)
     print(df[['close', 'future_return', 'label']].tail(10))
