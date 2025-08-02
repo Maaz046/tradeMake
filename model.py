@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from utils import get_top_features, summarize_performance
 from collections import Counter
+from inference import run_inference
 
 
 def train_model(df: pd.DataFrame, feature_cols=None, model_path='xgb_model.pkl'):
@@ -81,7 +82,7 @@ def train_model(df: pd.DataFrame, feature_cols=None, model_path='xgb_model.pkl')
     # === 1. Train on all features
     model.fit(X_train, y_train)
     print("✅ Predicting...")
-    preds_all = model.predict(X_test)
+    preds_all, _ = run_inference(model, X_test)
 
     # === 2. Evaluate performance on all features
     try:
@@ -104,7 +105,7 @@ def train_model(df: pd.DataFrame, feature_cols=None, model_path='xgb_model.pkl')
 
     # === 5. Retrain model using only top features
     model.fit(X_train[top_features], y_train)
-    preds_top = model.predict(X_test[top_features])
+    preds_top, _ = run_inference(model, X_test[top_features])
 
     # === 6. Evaluate performance after tuning
     try:
@@ -119,7 +120,8 @@ def train_model(df: pd.DataFrame, feature_cols=None, model_path='xgb_model.pkl')
     # === 7. Save model
     joblib.dump(model, model_path)
 
-    return model, top_features
+    # Return the trained model, list of top features, and test sets for further evaluation
+    return model, top_features, X_test, y_test
 
 if __name__ == "__main__":
     from data import fetch_okx_data

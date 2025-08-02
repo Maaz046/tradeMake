@@ -7,6 +7,7 @@ from features import (
 )
 from labeling import label_data
 from model import train_model
+from inference import run_inference
 from signals import generate_signals
 from backtest import run_backtest
 from utils import add_signal_timing_features
@@ -32,8 +33,11 @@ def run_pipeline():
 
     # 6. Train the model and select top features
     print("🔁 Training model...")
-    model, top_features = train_model(df_labeled, model_path=model_path)
+    model, top_features, X_test, y_test = train_model(df_labeled, model_path=model_path)
     print("✅ Model training completed")
+
+    # Run inference on test set
+    preds, probs = run_inference(model, X_test[top_features])
 
     # 7. Generate predictions and trading signals
     df_signals = generate_signals(df_labeled, model_path=model_path, feature_names=top_features)
