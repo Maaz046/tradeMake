@@ -1,22 +1,24 @@
 # backtest.py
 import vectorbt as vbt
 import pandas as pd
-from utils import plot_portfolio, display_trade_log
+from utils import display_trade_log
+from visualization import plot_portfolio, plot_trade_return_vs_duration
 
 
-def run_backtest(df: pd.DataFrame, title="ML Strategy Backtest"):
+def run_backtest(df: pd.DataFrame, df_trades: pd.DataFrame, title="ML Strategy Backtest"):
     pf = vbt.Portfolio.from_signals(
         close=df['close'],
         entries=df['entry_signal'],
         exits=df['exit_signal'],
         freq='1D',
-        slippage=0.001,     # 0.1% slippage
+        slippage=0.001,     # 0.1% slippage 
         fees=0.001          # 0.1% trading fees
     )
     
     # Display results
     print(pf.stats())
     plot_portfolio(pf)
+    plot_trade_return_vs_duration(df_trades)
     display_trade_log(pf)
 
 
@@ -31,4 +33,6 @@ if __name__ == "__main__":
     df = add_technical_indicators(df)
     df = generate_signals(df)
 
-    run_backtest(df)
+    from analysis import compute_trade_durations_returns
+    df_trades = compute_trade_durations_returns(df)
+    run_backtest(df, df_trades)

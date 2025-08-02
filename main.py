@@ -24,8 +24,8 @@ def run_pipeline():
     # 3. Add time-based features
     df = add_time_features(df)
 
-    # 4. Label the data with buy/hold/sell
-    df_labeled = label_data(df)
+    # 4. Label the data with buy/hold/sell, df_trades contains data of how long a trade was held (this is plotted for checking)
+    df_labeled, df_trades = label_data(df)
 
     # 5. Add signal timing context features (after labeling)
     df_labeled = add_signal_timing_features(df_labeled)
@@ -39,7 +39,7 @@ def run_pipeline():
     df_signals = generate_signals(df_labeled, model_path=model_path, feature_names=top_features)
 
     # 8. Run backtest
-    run_backtest(df_signals)
+    run_backtest(df_signals, df_trades)
 
 if __name__ == "__main__":
     run_pipeline()

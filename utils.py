@@ -54,19 +54,6 @@ def summarize_performance(y_true, y_pred, title=""):
             print(f"  Class {label}: F1 = {scores['f1-score']:.4f}")
 
 
-def plot_portfolio(pf: vbt.Portfolio, title="ML Strategy Backtest", show=True):
-    fig = pf.plot(title=title)
-    fig.update_layout(
-        title=dict(y=0.95),
-        legend=dict(yanchor="top", y=0.99),
-        margin=dict(t=80)
-    )
-    if show:
-        fig.show()
-    return fig
-
-import pandas as pd
-
 def display_trade_log(pf, max_rows=10):
     trades_df = pf.trades.records_readable.copy()
 
