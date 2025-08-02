@@ -39,10 +39,12 @@
 	•	Impact: False signals → unnecessary trades → drawdown.
 	•	Fix: Add confidence filter (probability threshold), or require minimum time between trades, or price proximity filter.
 	•	Effort: Very low — can do inside signals.py.
-        1. Probability threshold        Filter predictions unless softmax prob > X
-        2. Cooldown filter              Don’t trade again within N days
-        3. Directional proximity        Only act if price is within X% of recent extrema
-        4. Volatility filter            Don’t trade if ATR is above average
+        DETAILS
+        • Create a seperate layer to handle inference, filtering and evaluation for better modularity in code
+        • Probability threshold        Filter predictions unless softmax prob > X
+        • Cooldown filter              Don’t trade again within N days
+        • Directional proximity        Only act if price is within X% of recent extrema
+        • Volatility filter            Don’t trade if ATR is above average
 
 
 ⸻
