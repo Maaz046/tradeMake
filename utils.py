@@ -122,11 +122,15 @@ def confidence_filter(preds, probs, threshold=0.6):
 def cooldown_filter(preds, timestamps, cooldown_days=3):
     """
     Prevents placing new trades (labels 0 or 2) within cooldown_days of the last one.
-    Converts such trades to HOLD (1).
+    Converts such trades to HOLD (1) if too close to previous trade.
+    Also returns an audit log for visualization.
     """
     last_trade_time = None
     filtered_preds = []
+    audit_log = []
+
     for pred, ts in zip(preds, timestamps):
+        original_pred = pred
         if pred in [0, 2]:
             if last_trade_time is None or (ts - last_trade_time).days >= cooldown_days:
                 filtered_preds.append(pred)
@@ -135,5 +139,7 @@ def cooldown_filter(preds, timestamps, cooldown_days=3):
                 filtered_preds.append(1)  # HOLD due to cooldown
         else:
             filtered_preds.append(pred)
+        audit_log.append((ts, original_pred, filtered_preds[-1]))  # Always append actual value used
+
     print(f"🧊 Cooldown filter applied — {filtered_preds} trades converted to HOLD")
-    return np.array(filtered_preds)
+    return np.array(filtered_preds), audit_log
