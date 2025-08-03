@@ -27,6 +27,7 @@ def generate_signals(df: pd.DataFrame, model_path='xgb_model.pkl', feature_names
     return df
 
 if __name__ == "__main__":
+    # Need to refactor this because OKX data is also being fetched from main
     df = fetch_okx_data(symbol='TON/USDT', timeframe='1d')
     df = add_technical_indicators(df)
 

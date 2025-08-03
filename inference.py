@@ -27,6 +27,10 @@ def apply_filters(preds, probs, threshold=0.6):
             filtered_preds.append(1)  # HOLD as fallback
     return np.array(filtered_preds)
 
+def run_raw_inference(model, X):
+    """Returns raw predictions and probabilities without filtering."""
+    return predict_labels(model, X), predict_probs(model, X)
+
 def run_inference(model, X, threshold=0.6, apply_filter=True):
     """
     Runs inference on input features X.
@@ -49,7 +53,3 @@ def run_inference(model, X, threshold=0.6, apply_filter=True):
         final_preds = raw_preds
 
     return final_preds, probs
-
-def run_raw_inference(model, X):
-    """Returns raw predictions and probabilities without filtering."""
-    return predict_labels(model, X), predict_probs(model, X)
