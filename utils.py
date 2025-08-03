@@ -143,3 +143,64 @@ def cooldown_filter(preds, timestamps, cooldown_days=3):
 
     print(f"🧊 Cooldown filter applied — {filtered_preds} trades converted to HOLD")
     return np.array(filtered_preds), audit_log
+
+def print_cooldown_summary(cooldown_log):
+    print("🧊 Cooldown Filter Summary:")
+    print(f"{'Idx':<5}{'Timestamp':<15}{'Raw':<10}{'Filtered':<10}{'Changed':<8}")
+    for i, (ts, raw, filt) in enumerate(cooldown_log):
+        if raw != filt:
+            print(f"{i:<5}{ts.strftime('%Y-%m-%d'):<15}{raw:<10}{filt:<10}✅")
+
+def directional_proximity_filter(preds, close_prices, support, resistance, tolerance=0.03):
+    """
+    Prevents trades if current price is not close to support/resistance.
+    BUY (2) only if close is within tolerance of support.
+    SELL (0) only if close is within tolerance of resistance.
+    """
+    filtered_preds = []
+    for pred, price, sup, res in zip(preds, close_prices, support, resistance):
+        if pred == 2:  # BUY
+            if price <= sup * (1 + tolerance):
+                filtered_preds.append(pred)
+            else:
+                filtered_preds.append(1)  # HOLD
+        elif pred == 0:  # SELL
+            if price >= res * (1 - tolerance):
+                filtered_preds.append(pred)
+            else:
+                filtered_preds.append(1)  # HOLD
+        else:
+            filtered_preds.append(pred)
+    print("📏 Directional proximity filter applied")
+    return np.array(filtered_preds)
+
+def get_price_dict(df: pd.DataFrame, start_idx: int = 0) -> dict:
+    """
+    Returns a dictionary of sliced close, high, low prices starting from split index.
+    """
+    return {
+        "close": df["close"].iloc[start_idx:],
+        "high": df["high"].iloc[start_idx:],
+        "low": df["low"].iloc[start_idx:]
+    }
+
+def get_split_index(df_len: int) -> int:
+    # Currently hardcoded to 80-20 split
+    return int(df_len * 0.8)
+
+def get_support_resistance(data: pd.DataFrame, window: int = 10) -> Tuple[pd.Series, pd.Series]:
+    """
+    Calculates rolling support (min low) and resistance (max high) levels.
+
+    Args:
+        prices: DataFrame with 'high' and 'low' columns.
+        window: Rolling window size in days.
+
+    Returns:
+        Tuple of (support_series, resistance_series)
+    """
+    split_index = get_split_index(len(data))
+    price_dict = get_price_dict(data,split_index)  # Extract close, high, low
+    support = price_dict["low"].rolling(window=window, min_periods=1).min()
+    resistance = price_dict["high"].rolling(window=window, min_periods=1).max()
+    return support, resistance, price_dict["close"]

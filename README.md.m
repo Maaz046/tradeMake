@@ -62,3 +62,8 @@
 	•	Impact: Low robustness. Market regime shifts can ruin it.
 	•	Fix: Blend short/long-term models, or stack Random Forest + XGB, or use voting.
 	•	Effort: High — requires multiple pipelines.
+
+
+// PROPER LOGGING
+
+// UNIT TESTING

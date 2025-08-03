@@ -6,7 +6,7 @@ from sklearn.metrics import classification_report
 import joblib
 import numpy as np
 import matplotlib.pyplot as plt
-from utils import get_top_features, summarize_performance
+from utils import get_top_features, summarize_performance, get_price_dict, get_split_index
 from collections import Counter
 from inference import run_inference
 
@@ -40,7 +40,7 @@ def train_model(df: pd.DataFrame, feature_cols=None, model_path='xgb_model.pkl')
 
     print("✅ Reached before train/test split")
     # Train/test split
-    split_index = int(len(X) * 0.8)
+    split_index = get_split_index(len(X))
     X_train, X_test = X.iloc[:split_index], X.iloc[split_index:]
     y_train, y_test = y.iloc[:split_index], y.iloc[split_index:]
 
@@ -57,11 +57,6 @@ def train_model(df: pd.DataFrame, feature_cols=None, model_path='xgb_model.pkl')
     if X.empty or y.empty:
         print("❌ Training aborted: X or y is empty after preprocessing.")
         return None, []
-
-    # Train/test split
-    split_index = int(len(X) * 0.8)
-    X_train, X_test = X.iloc[:split_index], X.iloc[split_index:]
-    y_train, y_test = y.iloc[:split_index], y.iloc[split_index:]
 
     from xgboost import XGBClassifier
     model = XGBClassifier(
@@ -82,7 +77,7 @@ def train_model(df: pd.DataFrame, feature_cols=None, model_path='xgb_model.pkl')
     # === 1. Train on all features
     model.fit(X_train, y_train)
     print("✅ Predicting...")
-    preds_all, _ = run_inference(model, X_test, df.index)
+    preds_all, _ = run_inference(model, X_test, df.index, df)
 
     # === 2. Evaluate performance on all features
     try:
@@ -105,7 +100,7 @@ def train_model(df: pd.DataFrame, feature_cols=None, model_path='xgb_model.pkl')
 
     # === 5. Retrain model using only top features
     model.fit(X_train[top_features], y_train)
-    preds_top, probs_top = run_inference(model, X_test[top_features], df.index)
+    preds_top, probs_top = run_inference(model, X_test[top_features], df.index, df)
 
     # === 6. Evaluate performance after tuning
     try:

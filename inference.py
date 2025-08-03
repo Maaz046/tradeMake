@@ -1,7 +1,7 @@
 # inference.py
 
 from visualization import plot_prediction_confidences
-from utils import confidence_filter, cooldown_filter
+from utils import confidence_filter, cooldown_filter, directional_proximity_filter, print_cooldown_summary, get_price_dict, get_support_resistance
 
 """
 This module handles inference logic for the trading model,
@@ -17,7 +17,7 @@ def predict_probs(model, X):
     """Returns class probabilities for each input."""
     return model.predict_proba(X)
 
-def apply_filters(preds, probs, timestamps, threshold=0.6):
+def apply_filters(preds, probs, timestamps, df, threshold=0.6):
     """
     Applies all filters sequentially: confidence and cooldown.
     Logs which labels were changed due to cooldown.
@@ -25,12 +25,10 @@ def apply_filters(preds, probs, timestamps, threshold=0.6):
     preds = confidence_filter(preds, probs, threshold)
     preds, cooldown_log = cooldown_filter(preds, timestamps)
 
-    print("🧊 Cooldown Filter Summary:")
-    print(f"{'Idx':<5}{'Timestamp':<15}{'Raw':<10}{'Filtered':<10}{'Changed':<8}")
-    for i, (ts, raw, filt) in enumerate(cooldown_log):
-        changed = "✅" if raw != filt else ""
-        if changed:  # Show only changed rows
-            print(f"{i:<5}{ts.strftime('%Y-%m-%d'):<15}{raw:<10}{filt:<10}{changed:<8}")
+    support, resistance, close = get_support_resistance(df)
+    directional_proximity_filter(preds, close, support, resistance)
+
+    print_cooldown_summary(cooldown_log)
 
     return preds
 
@@ -38,7 +36,7 @@ def run_raw_inference(model, X):
     """Returns raw predictions and probabilities without filtering."""
     return predict_labels(model, X), predict_probs(model, X)
 
-def run_inference(model, X, timestamps, threshold=0.6, apply_filter=True):
+def run_inference(model, X, timestamps, df, threshold=0.6, apply_filter=True):
     """
     Runs inference on input features X.
 
@@ -53,11 +51,12 @@ def run_inference(model, X, timestamps, threshold=0.6, apply_filter=True):
     """
     raw_preds = predict_labels(model, X)
     probs = predict_probs(model, X)
+
     # Uncomment if needed
     # plot_prediction_confidences(probs, raw_preds, threshold)
 
     if apply_filter:
-        final_preds = apply_filters(raw_preds, probs, timestamps, threshold)
+        final_preds = apply_filters(raw_preds, probs, timestamps, df, threshold)
     else:
         final_preds = raw_preds
 
