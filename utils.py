@@ -158,7 +158,9 @@ def directional_proximity_filter(preds, close_prices, support, resistance, toler
     SELL (0) only if close is within tolerance of resistance.
     """
     filtered_preds = []
-    for pred, price, sup, res in zip(preds, close_prices, support, resistance):
+    audit_log = []
+    for i, (pred, price, sup, res) in enumerate(zip(preds, close_prices, support, resistance)):
+        original_pred = pred
         if pred == 2:  # BUY
             if price <= sup * (1 + tolerance):
                 filtered_preds.append(pred)
@@ -171,8 +173,25 @@ def directional_proximity_filter(preds, close_prices, support, resistance, toler
                 filtered_preds.append(1)  # HOLD
         else:
             filtered_preds.append(pred)
-    print("📏 Directional proximity filter applied")
+        audit_log.append((i, price, sup, res, original_pred, pred))
+
+    print("📏 Directional proximity filter applied", audit_log)
+    print_directional_proximity_summary(audit_log)
     return np.array(filtered_preds)
+
+def print_directional_proximity_summary(supp_res_logs):
+    printed=False
+    print("📏 Directional Proximity Filter Summary:")
+    print(f"{'Idx':<5}{'Close':<10}{'Support':<10}{'Resistance':<12}{'Raw':<6}{'Filtered':<9}{'Changed':<8}")
+    for row in supp_res_logs:
+        idx, price, sup, res, raw, filtered = row
+        changed = "✅" if raw != filtered else ""
+        if changed:  # Show only changed
+            printed=True
+            print(f"{idx:<5}{price:<10.3f}{sup:<10.3f}{res:<12.3f}{raw:<6}{filtered:<9}{changed:<8}")
+    
+    if not printed:
+        print("✅ No trades were filtered by directional proximity.")
 
 def get_price_dict(df: pd.DataFrame, start_idx: int = 0) -> dict:
     """
