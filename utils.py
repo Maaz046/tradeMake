@@ -105,3 +105,35 @@ def add_signal_timing_features(df: pd.DataFrame) -> pd.DataFrame:
     df['days_since_sell'] = since_sell
 
     return df
+
+def confidence_filter(preds, probs, threshold=0.6):
+    """
+    Applies confidence thresholding.
+    Replaces predictions with HOLD (1) if max class probability is below threshold.
+    """
+    filtered_preds = []
+    for pred, prob in zip(preds, probs):
+        if max(prob) >= threshold:
+            filtered_preds.append(pred)
+        else:
+            filtered_preds.append(1)
+    return np.array(filtered_preds)
+
+def cooldown_filter(preds, timestamps, cooldown_days=3):
+    """
+    Prevents placing new trades (labels 0 or 2) within cooldown_days of the last one.
+    Converts such trades to HOLD (1).
+    """
+    last_trade_time = None
+    filtered_preds = []
+    for pred, ts in zip(preds, timestamps):
+        if pred in [0, 2]:
+            if last_trade_time is None or (ts - last_trade_time).days >= cooldown_days:
+                filtered_preds.append(pred)
+                last_trade_time = ts
+            else:
+                filtered_preds.append(1)  # HOLD due to cooldown
+        else:
+            filtered_preds.append(pred)
+    print(f"🧊 Cooldown filter applied — {filtered_preds} trades converted to HOLD")
+    return np.array(filtered_preds)

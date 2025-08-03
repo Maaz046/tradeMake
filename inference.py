@@ -1,6 +1,7 @@
 # inference.py
 
 from visualization import plot_prediction_confidences
+from utils import confidence_filter, cooldown_filter
 
 """
 This module handles inference logic for the trading model,
@@ -16,25 +17,19 @@ def predict_probs(model, X):
     """Returns class probabilities for each input."""
     return model.predict_proba(X)
 
-def apply_filters(preds, probs, threshold=0.6):
+def apply_filters(preds, probs, timestamp, threshold=0.6):
     """
-    Applies confidence thresholding.
-    Returns HOLD (1) if confidence is too low.
+    Applies all filters sequentially: confidence and cooldown.
     """
-    filtered_preds = []
-    for pred, prob in zip(preds, probs):
-        # If the highest class probability meets the threshold, keep prediction
-        if max(prob) >= threshold:
-            filtered_preds.append(pred)
-        else:
-            filtered_preds.append(1)  # HOLD as fallback
-    return np.array(filtered_preds)
+    preds = confidence_filter(preds, probs, threshold)
+    preds = cooldown_filter(preds, timestamp, cooldown_days=3)
+    return preds
 
 def run_raw_inference(model, X):
     """Returns raw predictions and probabilities without filtering."""
     return predict_labels(model, X), predict_probs(model, X)
 
-def run_inference(model, X, threshold=0.6, apply_filter=False):
+def run_inference(model, X, timestamps, threshold=0.6, apply_filter=True):
     """
     Runs inference on input features X.
 
@@ -49,12 +44,11 @@ def run_inference(model, X, threshold=0.6, apply_filter=False):
     """
     raw_preds = predict_labels(model, X)
     probs = predict_probs(model, X)
-
     # Uncomment if needed
     # plot_prediction_confidences(probs, raw_preds, threshold)
 
     if apply_filter:
-        final_preds = apply_filters(raw_preds, probs, threshold)
+        final_preds = apply_filters(raw_preds, probs, timestamps, threshold)
     else:
         final_preds = raw_preds
 

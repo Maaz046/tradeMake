@@ -82,7 +82,7 @@ def train_model(df: pd.DataFrame, feature_cols=None, model_path='xgb_model.pkl')
     # === 1. Train on all features
     model.fit(X_train, y_train)
     print("✅ Predicting...")
-    preds_all, _ = run_inference(model, X_test)
+    preds_all, _ = run_inference(model, X_test, df.index)
 
     # === 2. Evaluate performance on all features
     try:
@@ -105,7 +105,7 @@ def train_model(df: pd.DataFrame, feature_cols=None, model_path='xgb_model.pkl')
 
     # === 5. Retrain model using only top features
     model.fit(X_train[top_features], y_train)
-    preds_top, _ = run_inference(model, X_test[top_features])
+    preds_top, probs_top = run_inference(model, X_test[top_features], df.index)
 
     # === 6. Evaluate performance after tuning
     try:
