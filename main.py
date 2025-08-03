@@ -28,7 +28,8 @@ def run_pipeline():
     df_labeled, df_trades = label_data(df)
 
     # 5. Add signal timing context features (after labeling)
-    df_labeled = add_signal_timing_features(df_labeled)
+    # Commented because of possible data leakage coming from this feature
+    # df_labeled = add_signal_timing_features(df_labeled)
 
     # 6. Train the model and select top features
     print("🔁 Training model...")

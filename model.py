@@ -23,7 +23,7 @@ def train_model(df: pd.DataFrame, feature_cols=None, model_path='xgb_model.pkl')
 
     # === Sanity check: shuffle labels if activated
     import random
-    sanity_check = True  # Set to True to activate label shuffling
+    sanity_check = False  # Set to True to activate label shuffling
     if sanity_check:
         print("⚠️ Sanity check active: shuffling labels...")
         y = y.sample(frac=1.0, random_state=42).reset_index(drop=True)

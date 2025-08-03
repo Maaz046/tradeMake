@@ -18,7 +18,7 @@ def run_backtest(df: pd.DataFrame, df_trades: pd.DataFrame, title="ML Strategy B
     # Display results
     print(pf.stats())
     plot_portfolio(pf)
-    plot_trade_return_vs_duration(df_trades)
+    # plot_trade_return_vs_duration(df_trades)
     display_trade_log(pf)
 
 

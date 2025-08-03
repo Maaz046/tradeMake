@@ -1,6 +1,9 @@
 # visualization.py
 import vectorbt as vbt
 import plotly.express as px
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 def plot_portfolio(pf: vbt.Portfolio, title="ML Strategy Backtest", show=True):
     fig = pf.plot(title=title)
@@ -38,3 +41,22 @@ def plot_trade_return_vs_duration(df_trades, show=True):
     if show:
         fig.show()
     return fig
+
+def plot_prediction_confidences(probs, raw_preds, final_preds, threshold=0.6):
+    max_probs = np.max(probs, axis=1)
+
+    plt.figure(figsize=(12, 6))
+    plt.hist(max_probs, bins=30, color='skyblue', edgecolor='k')
+    plt.axvline(threshold, color='red', linestyle='--', label=f"Threshold = {threshold}")
+    plt.title("Prediction Confidence Distribution")
+    plt.xlabel("Max Class Probability")
+    plt.ylabel("Count")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+    # Optional: print basic stats
+    print(f"🔍 Total Predictions: {len(max_probs)}")
+    print(f"✅ Above threshold: {(max_probs >= threshold).sum()}")
+    print(f"⚠️ Below threshold (set to HOLD): {(max_probs < threshold).sum()}")

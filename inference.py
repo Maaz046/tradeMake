@@ -1,4 +1,7 @@
 # inference.py
+
+from visualization import plot_prediction_confidences
+
 """
 This module handles inference logic for the trading model,
 including prediction, probability generation, and signal filtering.
@@ -31,7 +34,7 @@ def run_raw_inference(model, X):
     """Returns raw predictions and probabilities without filtering."""
     return predict_labels(model, X), predict_probs(model, X)
 
-def run_inference(model, X, threshold=0.6, apply_filter=True):
+def run_inference(model, X, threshold=0.6, apply_filter=False):
     """
     Runs inference on input features X.
 
@@ -46,6 +49,9 @@ def run_inference(model, X, threshold=0.6, apply_filter=True):
     """
     raw_preds = predict_labels(model, X)
     probs = predict_probs(model, X)
+
+    # Uncomment if needed
+    # plot_prediction_confidences(probs, raw_preds, threshold)
 
     if apply_filter:
         final_preds = apply_filters(raw_preds, probs, threshold)
