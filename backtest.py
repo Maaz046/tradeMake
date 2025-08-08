@@ -2,7 +2,7 @@
 import vectorbt as vbt
 import pandas as pd
 from utils import display_trade_log
-from visualization import plot_portfolio, plot_trade_return_vs_duration
+from visualization import plot_portfolio, plot_trade_return_vs_duration, plot_price_with_volatility
 
 
 def run_backtest(df: pd.DataFrame, df_trades: pd.DataFrame, title="ML Strategy Backtest"):
@@ -17,6 +17,7 @@ def run_backtest(df: pd.DataFrame, df_trades: pd.DataFrame, title="ML Strategy B
     
     # Display results
     print(pf.stats())
+    plot_price_with_volatility(df,pf)
     plot_portfolio(pf)
     # plot_trade_return_vs_duration(df_trades)
     display_trade_log(pf)

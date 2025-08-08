@@ -4,6 +4,8 @@ import plotly.express as px
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 def plot_portfolio(pf: vbt.Portfolio, title="ML Strategy Backtest", show=True):
     fig = pf.plot(title=title)
@@ -60,3 +62,56 @@ def plot_prediction_confidences(probs, raw_preds, final_preds, threshold=0.6):
     print(f"🔍 Total Predictions: {len(max_probs)}")
     print(f"✅ Above threshold: {(max_probs >= threshold).sum()}")
     print(f"⚠️ Below threshold (set to HOLD): {(max_probs < threshold).sum()}")
+
+
+def plot_price_with_volatility(df, pf, volatility_col='atr', title="Price & Volatility (ATR)", show=True):
+    """
+    Overlay portfolio price (left axis) with a volatility series (right axis) on one chart.
+    Assumes df.index is the time index and df[volatility_col] exists.
+    """
+
+    # --- Safety checks
+    assert volatility_col in df.columns, f"Column '{volatility_col}' not found in DataFrame"
+    vol = df[volatility_col]
+
+    # pf.asset_value() returns a vectorbt/pandas Series; align it to df.index for clean plotting
+    price = pf.asset_value().reindex(df.index)
+
+    # --- Build figure with secondary y-axis
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    
+    # Price trace (left axis)
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
+            y=price,
+            mode='lines',
+            name='Price'
+        ),
+        secondary_y=False
+    )
+
+    # Volatility (right axis)
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
+            y=vol,
+            mode='lines',
+            name=f'Volatility ({volatility_col.upper()})',
+            line=dict(dash='dot')
+        ),
+        secondary_y=True
+    )
+
+    # --- Layout
+    fig.update_layout(
+        title=title,
+        legend=dict(x=0.01, y=0.99),
+        margin=dict(t=60, r=20, l=50, b=40)
+    )
+    fig.update_yaxes(title_text="Price", secondary_y=False)
+    fig.update_yaxes(title_text=f"{volatility_col.upper()}", secondary_y=True, showgrid=False)
+
+    if show:
+        fig.show()
+    return fig
