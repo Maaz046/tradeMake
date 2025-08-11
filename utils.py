@@ -175,13 +175,35 @@ def directional_proximity_filter(preds, close_prices, support, resistance, toler
             filtered_preds.append(pred)
         audit_log.append((i, price, sup, res, original_pred, pred))
 
-    print("📏 Directional proximity filter applied", audit_log)
-    print_directional_proximity_summary(audit_log)
     return np.array(filtered_preds)
+
+    def volatility_filter(preds, df, atr_col='atr', window=14, mult=1.5):
+        """
+        Prevent trades (labels 0/2) when ATR is unusually high vs its rolling mean.
+        Converts such trades to HOLD (1).
+        Returns filtered preds and count of changes for logging.
+        """
+        import numpy as np
+        assert atr_col in df.columns, f"Column '{atr_col}' not found in DataFrame"
+        atr = df[atr_col]
+        atr_avg = atr.rolling(window=window, min_periods=1).mean()
+
+        filtered = []
+        changed = 0
+        for pred, cur_atr, avg_atr in zip(preds, atr, atr_avg):
+            if pred in [0, 2] and cur_atr > mult * avg_atr:
+                filtered.append(1)  # HOLD
+                changed += 1
+            else:
+                filtered.append(pred)
+        print_volatility_summary(changed, len(preds))
+    return np.array(filtered), changed
+
+def print_volatility_summary(changed_count, total):
+    print(f"📉 Volatility filter applied — {changed_count}/{total} trades converted to HOLD")
 
 def print_directional_proximity_summary(supp_res_logs):
     printed=False
-    print("📏 Directional Proximity Filter Summary:")
     print(f"{'Idx':<5}{'Close':<10}{'Support':<10}{'Resistance':<12}{'Raw':<6}{'Filtered':<9}{'Changed':<8}")
     for row in supp_res_logs:
         idx, price, sup, res, raw, filtered = row
